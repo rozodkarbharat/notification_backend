@@ -1,9 +1,11 @@
 const express = require('express');
 const connection = require('./db');
-
+const cors = require('cors');
 
 
 const app = express();
+app.use(express.json());
+app.use(cors());
 
 
 app.get('/', (req, res) => {
@@ -13,16 +15,23 @@ app.get('/', (req, res) => {
 app.post('/token', (req, res) => {
     try{
         let token=req.body.token;
-        let DateTime   =new Date();
-        let query= 'INSERT INTO Notification (UserID,DateTime,Token) VALUES (?,?,?)'
-        connection.query(query,['Bha9096',token,DateTime]).then((response) => {
-            console.log(response)
-            res.send({Message:"Token Added successfully"})
+        console.log("token: " + token);
+        let DateTime = new Date();
+        let query= 'INSERT INTO notification (UserID,DateTime,Token) VALUES (?,?,?)'
+        connection.query(query,['Bha9096',DateTime,token],(err,response) => {
+            if (err) {
+                res
+                  .status(500)
+                  .json({ message: "Error getting broker details", error: true });
+                return;
+              }
+              else{
+                  console.log(response,'success')
+                  res.send({Message:"Token Added successfully"})
+                  return;
+              }
         })
-        .catch((err) => {
-            res.send({Message:"Error adding notification token"})
-            console.log("catch error", err.message)
-        })
+    
 
     }
     catch(err){
@@ -31,6 +40,30 @@ app.post('/token', (req, res) => {
     }
 })
 
+
+app.get("/mytoken", (req, res) => {
+    try{
+    let query= 'SELECT * from notification WHERE UserID=?'
+        connection.query(query,['Bha9096'],(err,response) => {
+            if (err) {
+                res
+                  .status(500)
+                  .json({ message: "Error getting token details", error: true });
+                return;
+              }
+              else{
+                  console.log(response,'success')
+                  res.send({Message:"Token Added successfully",data:response[response.length-1]})
+                  return;
+              }
+        })
+        
+    }
+    catch(err){
+        res.send({Message:"Error adding notification token"})
+        console.log("Error: ", err.message)
+    }
+})
 
 app.listen(8000,() => {
     console.log('listening on port: '+8000)
